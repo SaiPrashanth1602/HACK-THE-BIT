@@ -101,108 +101,118 @@
     </main>
 
     <script>
-        const masterEvents = JSON.parse(localStorage.getItem('all_events_registry')) || [];
-        const wishlistIds = JSON.parse(localStorage.getItem('event_wishlist')) || [];
-        const historicalIds = [201, 202, 203, 204, 205, 206, 207];
+    // 1. Change these to 'let' so they can be updated when localStorage changes
+    let masterEvents = JSON.parse(localStorage.getItem('all_events_registry')) || [];
+    let wishlistIds = JSON.parse(localStorage.getItem('event_wishlist')) || [];
+    const historicalIds = [201, 202, 203, 204, 205, 206, 207];
 
-        function initIntercept() {
-            const container = document.getElementById('event-results-container');
-            const affinityContainer = document.getElementById('affinity-results-container');
-            const aiBox = document.getElementById('ai-event-insight');
+    function initIntercept() {
+        const container = document.getElementById('event-results-container');
+        const affinityContainer = document.getElementById('affinity-results-container');
+        const aiBox = document.getElementById('ai-event-insight');
 
-            if (masterEvents.length === 0) {
-                container.innerHTML = `<p class="opacity-40 italic border border-dashed border-white/10 p-4 text-center">NO DATA INTERCEPTED</p>`;
-                return;
-            }
+        // Always check the current state of variables
+        if (masterEvents.length === 0) {
+            container.innerHTML = `<p class="opacity-40 italic border border-dashed border-white/10 p-4 text-center">NO DATA INTERCEPTED</p>`;
+            return;
+        }
 
-            // 1. GET YOUR MASTERED SKILLS FROM HISTORY (201-207)
-            const attendedEvents = masterEvents.filter(e => historicalIds.includes(e.id));
-            const masteredSkills = [...new Set(attendedEvents.flatMap(e => e.skills || []))].map(s => s.toLowerCase());
+        // 1. GET MASTERED SKILLS FROM HISTORY
+        const attendedEvents = masterEvents.filter(e => historicalIds.includes(e.id));
+        const masteredSkills = [...new Set(attendedEvents.flatMap(e => e.skills || []))].map(s => s.toLowerCase());
+        
+        // 2. GET LIVE SIGNALS
+        const liveSignals = masterEvents.filter(e => !historicalIds.includes(e.id));
+
+        // 3. SCORE LIVE SIGNALS
+        const processed = liveSignals.map(ev => {
+            const skills = (ev.skills || []).map(s => s.toLowerCase());
+            const historyMatch = skills.filter(s => masteredSkills.includes(s)).length;
             
-            // 2. GET CURRENT AVAILABLE EVENTS (Exclude history)
-            const liveSignals = masterEvents.filter(e => !historicalIds.includes(e.id));
+            return {
+                ...ev,
+                historyMatch,
+                totalScore: historyMatch
+            };
+        }).sort((a, b) => b.totalScore - a.totalScore);
 
-            // 3. SCORE LIVE SIGNALS BASED ON SKILL OVERLAP
-            const processed = liveSignals.map(ev => {
-                const skills = (ev.skills || []).map(s => s.toLowerCase());
-                // Find how many skills in this LIVE event match your HISTORY
-                const historyMatch = skills.filter(s => masteredSkills.includes(s)).length;
-                
-                return {
-                    ...ev,
-                    historyMatch,
-                    totalScore: historyMatch
-                };
-            }).sort((a, b) => b.totalScore - a.totalScore);
-
-            // 4. RENDER MARKET FEED (Everything currently active)
-            container.innerHTML = processed.slice(0, 6).map((ev, idx) => `
-                <div class="event-card p-6" style="animation: slideIn 0.3s ease-out ${idx * 0.1}s both;">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="orbitron text-base text-white font-bold">${ev.title}</h3>
-                            <p class="text-[9px] text-green-400 opacity-60 uppercase tracking-widest mt-1">${ev.location}</p>
-                        </div>
-                        <span class="text-green-400 font-bold orbitron text-[10px] border border-green-400/20 px-2 py-1">LIVE_SIGNAL</span>
+        // 4. RENDER MARKET FEED
+        container.innerHTML = processed.slice(0, 6).map((ev, idx) => `
+            <div class="event-card p-6" style="animation: slideIn 0.3s ease-out ${idx * 0.1}s both;">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="orbitron text-base text-white font-bold">${ev.title}</h3>
+                        <p class="text-[9px] text-green-400 opacity-60 uppercase tracking-widest mt-1">${ev.location}</p>
                     </div>
+                    <span class="text-green-400 font-bold orbitron text-[10px] border border-green-400/20 px-2 py-1">LIVE_SIGNAL</span>
+                </div>
+                <div class="mt-4 flex items-center justify-between">
+                    <div class="flex flex-wrap gap-2">
+                        ${(ev.skills || []).map(s => `<span class="text-[8px] border border-white/10 text-gray-500 px-2 py-0.5 uppercase">${s}</span>`).join('')}
+                    </div>
+                    <button onclick="window.location.href='event.html'" 
+                        class="orbitron text-[8px] border border-green-400 text-green-400 px-4 py-2 hover:bg-green-400 hover:text-black transition uppercase tracking-widest ml-4">
+                        Register_Entry
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        // 5. RENDER AFFINITY FEED
+        const affinityMatches = processed.filter(e => e.historyMatch > 0);
+
+        if (affinityMatches.length > 0) {
+            affinityContainer.innerHTML = affinityMatches.map((ev, idx) => {
+                const matchedSkill = ev.skills.find(s => masteredSkills.includes(s.toLowerCase())) || "Neural Link";
+                return `
+                <div class="event-card affinity-card p-6" style="animation: slideIn 0.4s ease-out ${idx * 0.1}s both;">
+                    <div class="flex justify-between items-start">
+                        <h3 class="orbitron text-base text-white font-bold">${ev.title}</h3>
+                        <span class="text-pink-400 orbitron text-[8px] border border-pink-500/30 px-2 py-1">AFFINITY_MATCH</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-3 italic">Shared Protocol: <span class="text-pink-500">${matchedSkill}</span> detected in your intercept history.</p>
                     <div class="mt-4 flex items-center justify-between">
-                        <div class="flex flex-wrap gap-2">
-                            ${(ev.skills || []).map(s => `<span class="text-[8px] border border-white/10 text-gray-500 px-2 py-0.5 uppercase">${s}</span>`).join('')}
+                        <div class="flex gap-2">
+                            ${(ev.skills || []).slice(0, 3).map(s => `<span class="text-[7px] text-pink-300 opacity-50 uppercase">${s}</span>`).join(' ')}
                         </div>
                         <button onclick="window.location.href='event.html'" 
-                            class="orbitron text-[8px] border border-green-400 text-green-400 px-4 py-2 hover:bg-green-400 hover:text-black transition uppercase tracking-widest ml-4">
-                            Register_Entry
+                            class="orbitron text-[8px] border border-pink-500 text-pink-500 px-4 py-2 hover:bg-pink-500 hover:text-black transition">
+                            INITIALIZE_EXTRACT
                         </button>
                     </div>
                 </div>
-            `).join('');
-
-            // 5. RENDER AFFINITY FEED (Live events that match your History)
-            const affinityMatches = processed.filter(e => e.historyMatch > 0);
-
-            if (affinityMatches.length > 0) {
-                affinityContainer.innerHTML = affinityMatches.map((ev, idx) => {
-                    // Find the specific skill that triggered the match
-                    const matchedSkill = ev.skills.find(s => masteredSkills.includes(s.toLowerCase())) || "Neural Link";
-
-                    return `
-                    <div class="event-card affinity-card p-6" style="animation: slideIn 0.4s ease-out ${idx * 0.1}s both;">
-                        <div class="flex justify-between items-start">
-                            <h3 class="orbitron text-base text-white font-bold">${ev.title}</h3>
-                            <span class="text-pink-400 orbitron text-[8px] border border-pink-500/30 px-2 py-1">AFFINITY_MATCH</span>
-                        </div>
-                        <p class="text-[11px] text-gray-400 mt-3 italic">Shared Protocol: <span class="text-pink-500">${matchedSkill}</span> detected in your intercept history.</p>
-                        <div class="mt-4 flex items-center justify-between">
-                            <div class="flex gap-2">
-                                ${(ev.skills || []).slice(0, 3).map(s => `<span class="text-[7px] text-pink-300 opacity-50 uppercase">${s}</span>`).join(' ')}
-                            </div>
-                            <button onclick="window.location.href='event.html'" 
-                                class="orbitron text-[8px] border border-pink-500 text-pink-500 px-4 py-2 hover:bg-pink-500 hover:text-black transition">
-                                INITIALIZE_EXTRACT
-                            </button>
-                        </div>
-                    </div>
-                `}).join('');
-            } else {
-                affinityContainer.innerHTML = `<p class="text-[10px] text-gray-600 uppercase italic p-4 border border-dashed border-gray-800">Searching for historical skill-match nodes...</p>`;
-            }
-
-            // 6. UPDATE SIDEBAR
-            document.getElementById('archive-count').innerText = `${attendedEvents.length} Units`;
-            
-            aiBox.innerHTML = `
-                <p>Neural engine analysis complete.</p>
-                <p class="mt-2">Based on your <span class="text-green-400">history at VIT Chennai</span>, I've isolated <span class="text-pink-500">${affinityMatches.length} available events</span> that match your established skill DNA.</p>
-            `;
-
-            setTimeout(() => {
-                const percent = (affinityMatches.length > 0) ? "88%" : "0%";
-                document.getElementById('relevance-bar').style.width = percent;
-                document.getElementById('relevance-percent').innerText = percent;
-            }, 500);
+            `}).join('');
+        } else {
+            affinityContainer.innerHTML = `<p class="text-[10px] text-gray-600 uppercase italic p-4 border border-dashed border-gray-800">Searching for historical skill-match nodes...</p>`;
         }
 
-        window.onload = initIntercept;
-    </script>
+        // 6. UPDATE SIDEBAR
+        document.getElementById('archive-count').innerText = `${attendedEvents.length} Units`;
+        
+        aiBox.innerHTML = `
+            <p>Neural engine analysis complete.</p>
+            <p class="mt-2">Based on your <span class="text-green-400">history at VIT Chennai</span>, I've isolated <span class="text-pink-500">${affinityMatches.length} available events</span> that match your established skill DNA.</p>
+        `;
+
+        setTimeout(() => {
+            const percent = (affinityMatches.length > 0) ? "88%" : "0%";
+            document.getElementById('relevance-bar').style.width = percent;
+            document.getElementById('relevance-percent').innerText = percent;
+        }, 500);
+    }
+
+    // 2. LISTEN FOR STORAGE CHANGES (Updates UI automatically when you save in event.html)
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'event_wishlist' || event.key === 'all_events_registry') {
+            // Update the variables with the new data
+            masterEvents = JSON.parse(localStorage.getItem('all_events_registry')) || [];
+            wishlistIds = JSON.parse(localStorage.getItem('event_wishlist')) || [];
+            // Refresh the UI
+            initIntercept();
+        }
+    });
+
+    window.onload = initIntercept;
+</script>
 </body>
 </html>
