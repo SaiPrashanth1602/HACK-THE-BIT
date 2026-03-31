@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalX | Intercept_Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="data.js"></script>
+    <style>
+        :root { --green: #00ff88; --pink: #ff00ff; --bg: #050508; }
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg);
+            color: #e0e0e0;
+            background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050508 100%);
+            overflow-x: hidden;
+        }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .glitch-border { border: 1px solid var(--green); box-shadow: 0 0 15px rgba(0, 255, 136, 0.1); }
+        .scanline {
+            width: 100%; height: 2px; background: rgba(0, 255, 136, 0.15);
+            position: fixed; top: 0; z-index: 10; pointer-events: none;
+            animation: scan 4s linear infinite;
+        }
+        @keyframes scan { from { top: 0; } to { top: 100vh; } }
+        .job-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 4px solid var(--green);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .job-card:hover {
+            background: rgba(0, 255, 136, 0.04);
+            transform: translateX(8px);
+            border-color: var(--green);
+        }
+        .affinity-card { border-left-color: var(--pink); background: rgba(255, 0, 255, 0.03); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+
+<body class="p-8">
+    <div class="scanline"></div>
+
+    <header class="max-w-5xl mx-auto mb-10 flex justify-between items-end border-b border-green-400/20 pb-6">
+        <div>
+            <h1 class="orbitron text-3xl text-green-400 tracking-tighter">DATA_INTERCEPT_SUCCESS</h1>
+            <p class="text-[10px] text-pink-500 uppercase tracking-widest mt-2">Source: Upwork_Global // Profile_Sync:
+                <span id="sync-status" class="animate-pulse">ACTIVE</span></p>
+        </div>
+        <button onclick="window.location.href='dashboard.html'"
+            class="orbitron text-[9px] border border-green-400/40 px-4 py-2 hover:bg-green-400 hover:text-black transition uppercase tracking-widest">Return_to_Dashboard</button>
+    </header>
+
+    <main class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-1 space-y-6">
+            <section class="glitch-border p-6 bg-black/40 backdrop-blur-sm sticky top-8">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-2 h-2 bg-green-400 animate-ping"></div>
+                    <h2 class="orbitron text-[10px] text-green-400 tracking-widest uppercase">// NEURAL_STRATEGY</h2>
+                </div>
+                <div id="ai-insight" class="text-[11px] leading-relaxed text-gray-400 font-mono italic">
+                    <p class="animate-pulse">PARSING SECTOR DATA...</p>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-white/5">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] opacity-60 uppercase">Market Alignment</span>
+                        <span id="relevance-percent" class="text-green-400 orbitron text-xs">0%</span>
+                    </div>
+                    <div class="w-full bg-white/5 h-1 mb-6">
+                        <div id="relevance-bar" class="bg-green-400 h-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-[9px] text-gray-500 uppercase">Completed Archive:</span>
+                        <span id="completed-count" class="text-[9px] text-pink-500 orbitron">0 Units</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="lg:col-span-2 space-y-12">
+            <section>
+                <div class="flex items-center gap-4 mb-6">
+                    <h2 class="orbitron text-lg text-green-400 tracking-widest uppercase">// LIVE_SIGNALS: MARKET_FEED</h2>
+                    <div class="h-[1px] flex-1 bg-gradient-to-r from-green-500/30 to-transparent"></div>
+                </div>
+                <div id="results-container" class="space-y-4"></div>
+            </section>
+
+            <section>
+                <div class="flex items-center gap-4 mb-6">
+                    <h2 class="orbitron text-sm text-pink-500 tracking-widest uppercase animate-pulse">// HISTORICAL_AFFINITY: RECOMMENDED</h2>
+                    <div class="h-[1px] flex-1 bg-gradient-to-r from-pink-500/50 to-transparent"></div>
+                </div>
+                <div id="affinity-results" class="grid grid-cols-1 gap-4"></div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        function renderResults() {
+            const container = document.getElementById('results-container');
+            const affinityContainer = document.getElementById('affinity-results');
+            const aiBox = document.getElementById('ai-insight');
+
+            // 1. DATA EXTRACTION
+            const completedJobsNames = JSON.parse(localStorage.getItem('completedJobs')) || [];
+            
+            // Map the names to full objects from the opportunities array to get their skills
+            const completedObjects = opportunities.filter(op => completedJobsNames.includes(op.title));
+            const masteredSkills = [...new Set(completedObjects.flatMap(op => op.skills || []))].map(s => s.toLowerCase());
+
+            // 2. FILTER LIVE DATA (New jobs only)
+            const liveOpportunities = opportunities.filter(op => !completedJobsNames.includes(op.title));
+
+            // 3. RENDER GLOBAL MARKET FEED (Top 5 general leads)
+            container.innerHTML = liveOpportunities.slice(0, 5).map((job, idx) => `
+                <div class="job-card p-6" style="animation: slideIn 0.3s ease-out ${idx * 0.1}s both;">
+                    <div class="flex justify-between items-start">
+                        <h3 class="orbitron text-base text-white font-bold">${job.title}</h3>
+                        <span class="text-green-400 font-bold orbitron text-[10px] border border-green-400/20 px-2 py-1">${job.budget}</span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mt-3 line-clamp-2">${job.desc}</p>
+                    <div class="mt-4 flex items-center justify-between">
+                        <div class="flex flex-wrap gap-2">
+                            ${(job.skills || []).map(s => {
+                                const isMastered = masteredSkills.includes(s.toLowerCase());
+                                return `<span class="text-[8px] border ${isMastered ? 'border-green-400/40 text-green-400' : 'border-white/10 text-gray-500'} px-2 py-0.5 uppercase">${s}</span>`
+                            }).join('')}
+                        </div>
+                        <button onclick="window.location.href='upworks.html'" 
+                            class="orbitron text-[8px] border border-green-400 text-green-400 px-4 py-2 hover:bg-green-400 hover:text-black transition uppercase tracking-widest ml-4">
+                            View_Lead
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // 4. RENDER AFFINITY FEED (Available jobs that share skills with History)
+            const affinityMatches = liveOpportunities.filter(job => 
+                job.skills.some(skill => masteredSkills.includes(skill.toLowerCase()))
+            );
+
+            if (affinityMatches.length > 0) {
+                affinityContainer.innerHTML = affinityMatches.map((job, idx) => {
+                    const sharedSkill = job.skills.find(s => masteredSkills.includes(s.toLowerCase()));
+                    
+                    return `
+                    <div class="job-card affinity-card p-6" style="animation: slideIn 0.4s ease-out ${idx * 0.1}s both;">
+                        <div class="flex justify-between items-start">
+                            <h3 class="orbitron text-base text-white font-bold">${job.title}</h3>
+                            <span class="text-pink-400 orbitron text-[8px] border border-pink-500/30 px-2 py-1">SKILL_MATCH</span>
+                        </div>
+                        <p class="text-[11px] text-gray-400 mt-3 italic">Intercepted Protocol: <span class="text-pink-500">${sharedSkill}</span> aligns with your archive.</p>
+                        <div class="mt-4 flex items-center justify-between">
+                            <div class="flex gap-2">
+                                ${(job.skills || []).slice(0, 3).map(s => `<span class="text-[7px] text-pink-300 opacity-50 uppercase">${s}</span>`).join(' ')}
+                            </div>
+                            <button onclick="window.location.href='upworks.html'" 
+                                class="orbitron text-[8px] border border-pink-500 text-pink-500 px-4 py-2 hover:bg-pink-500 hover:text-black transition shadow-[0_0_10px_rgba(255,0,255,0.2)]">
+                                INITIALIZE_EXTRACT
+                            </button>
+                        </div>
+                    </div>
+                `}).join('');
+            } else {
+                affinityContainer.innerHTML = `<p class="text-[10px] text-gray-600 uppercase italic p-4 border border-dashed border-gray-800">No high-probability historical matches found in current signal...</p>`;
+            }
+
+            // 5. UPDATE SIDEBAR & METRICS
+            document.getElementById('completed-count').innerText = `${completedJobsNames.length} Units`;
+
+            if (completedJobsNames.length > 0) {
+                const topSector = masteredSkills[0] || "General Tech";
+                aiBox.innerHTML = `
+                    <p>Neural analysis complete.</p>
+                    <p class="mt-2">Extracted <span class="text-green-400">${completedJobsNames.length} past successful deployments</span>.</p>
+                    <p class="mt-4 text-white/50 text-[9px] border-l border-green-400 pl-2">Detected <span class="text-pink-500">${affinityMatches.length} high-affinity leads</span> matching your expertise in <span class="text-white">${topSector.toUpperCase()}</span>.</p>
+                `;
+            } else {
+                aiBox.innerHTML = `<p class="italic text-gray-600">Awaiting historical data. Complete projects in the UPWORKS module to generate affinity maps.</p>`;
+            }
+
+            setTimeout(() => {
+                const percent = (affinityMatches.length > 0) ? "92%" : "0%";
+                document.getElementById('relevance-bar').style.width = percent;
+                document.getElementById('relevance-percent').innerText = percent;
+            }, 500);
+        }
+
+        window.onload = renderResults;
+    </script>
+</body>
+</html>

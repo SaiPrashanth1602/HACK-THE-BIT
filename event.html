@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIT Events Hub | Glassmorphism Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.01em;
+            background-color: #f8fafc;
+            background-image: radial-gradient(at 0% 0%, rgba(224, 242, 254, 0.5) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(241, 245, 249, 0.5) 0px, transparent 50%);
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.05);
+        }
+
+        .event-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 1.5rem;
+            overflow: hidden;
+        }
+
+        .event-card:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #0f172a;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-link-active {
+            background: rgba(15, 23, 42, 0.05);
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(15, 23, 42, 0.1);
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(226, 232, 240, 1);
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background: #0f172a !important;
+            color: white !important;
+            border-color: #0f172a !important;
+        }
+
+        .popup-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .bookmark-active {
+            fill: #0f172a;
+            stroke: #0f172a;
+        }
+    </style>
+</head>
+
+<body class="text-slate-900 flex min-h-screen">
+    <aside class="w-64 glass border-r p-6 hidden md:flex flex-col sticky top-0 h-screen z-20">
+        <div class="flex items-center gap-3 mb-10 px-2">
+            <div
+                class="w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center font-bold text-white text-xs shadow-lg">
+                VE</div>
+            <h1 class="text-lg font-bold tracking-tight text-slate-900">VIT Events</h1>
+        </div>
+        <nav class="space-y-1.5 flex-1">
+            <button onclick="setView('feed')" id="nav-find"
+                class="w-full text-left flex items-center gap-3 px-3 py-2 text-slate-900 rounded-xl font-semibold text-sm transition-all nav-link-active">Explore
+                Events</button>
+            <button onclick="setView('wishlist')" id="nav-wishlist"
+                class="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-white/50 transition rounded-xl text-slate-500 text-sm">Saved
+                Items</button>
+            <button onclick="setView('completed')" id="nav-completed"
+                class="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-white/50 transition rounded-xl text-slate-500 text-sm">Attended</button>
+        </nav>
+        <div id="view-indicator" class="hidden mt-4 pt-4 border-t border-slate-200/50">
+            <button onclick="setView('feed')"
+                class="text-slate-900 text-xs font-bold flex items-center gap-2 hover:opacity-70 uppercase tracking-widest">←
+                Back to Feed</button>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-6 md:p-12 overflow-y-auto">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+            <div>
+                <h2 id="main-title" class="text-3xl font-extrabold text-slate-900 tracking-tight">🎓 VIT Events Hub</h2>
+                <p id="main-subtitle" class="text-slate-500 text-sm mt-1">Discover workshops and hackathons on campus.
+                </p>
+            </div>
+            <button id="clear-storage-btn" onclick="clearCurrentStorage()"
+                class="hidden px-5 py-2.5 bg-red-50/50 border border-red-100 text-red-600 text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-red-500 hover:text-white transition-all">Clear
+                All Records</button>
+        </header>
+
+        <section id="insights-bar" class="mb-10 p-6 glass rounded-2xl sticky top-6 z-10">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-6">
+                    <div
+                        class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100/50 px-2 py-1 rounded">
+                        Live Status</div>
+                    <div id="top-skills" class="text-xs font-bold text-slate-600 uppercase tracking-tighter">Campus
+                        Active Now</div>
+                </div>
+                <div class="flex gap-8">
+                    <div class="flex flex-col items-center"><span
+                            class="text-[10px] font-bold text-slate-400 uppercase">Saved</span><span id="count-wish"
+                            class="text-xl font-bold text-slate-900">0</span></div>
+                    <div class="flex flex-col items-center"><span
+                            class="text-[10px] font-bold text-slate-400 uppercase">Attended</span><span id="count-done"
+                            class="text-xl font-bold text-slate-900">0</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="search-filter-area" class="mb-10">
+            <div class="flex gap-3 mb-6">
+                <div class="relative flex-1"><input id="search" type="text" placeholder="Search events..."
+                        onkeyup="filterEvents()"
+                        class="w-full pl-5 pr-4 py-4 glass rounded-2xl focus:outline-none transition text-sm shadow-sm" />
+                </div>
+            </div>
+            <div id="filter-container"
+                class="flex gap-2 flex-wrap p-2 bg-white/30 backdrop-blur-sm border border-white/50 rounded-2xl">
+                <button class="filter-btn active px-5 py-2 rounded-xl text-xs font-semibold"
+                    onclick="setFilter('All', this)">All</button>
+                <button class="filter-btn px-5 py-2 rounded-xl text-xs font-semibold"
+                    onclick="setFilter('Workshop', this)">Workshops</button>
+                <button class="filter-btn px-5 py-2 rounded-xl text-xs font-semibold"
+                    onclick="setFilter('Hackathon', this)">Hackathons</button>
+                <button class="filter-btn px-5 py-2 rounded-xl text-xs font-semibold"
+                    onclick="setFilter('Seminar', this)">Seminars</button>
+            </div>
+        </section>
+        <div id="eventsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </main>
+
+    <div id="popup"
+        class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-sm">
+        <div class="popup-glass p-8 rounded-3xl w-full max-w-md shadow-2xl relative border border-white">
+            <h2 id="popupTitle" class="text-2xl font-bold text-slate-900 mb-4"></h2>
+            <div id="popupBody" class="space-y-4"></div>
+            <div class="flex gap-3 mt-8">
+                <button onclick="closePopup()"
+                    class="flex-1 py-4 border border-slate-200 text-slate-500 font-bold rounded-2xl hover:bg-slate-50 transition">Close</button>
+                <button id="registerBtn"
+                    class="flex-1 py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition shadow-lg shadow-slate-900/20">Register
+                    Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // 1. CURRENT FEED: 15 Unique active/future events
+    const allEvents = [
+        { id: 101, title: "AGRHINOVA (VITian)", skills: ["Agriculture", "IoT"], location: "KGA", type: "Workshop", image: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6", participants: 140 },
+        { id: 102, title: "MAANG OTT Architecture", skills: ["Web", "React"], location: "AB1", type: "Seminar", image: "https://images.unsplash.com/photo-1555949963-aa79dcee981c", participants: 520 },
+        { id: 103, title: "CODELYMPICS Tier 1", skills: ["Coding", "Java"], location: "MG Hall", type: "Hackathon", image: "https://images.unsplash.com/photo-1518779578993-ec3579fee39f", participants: 98 },
+        { id: 104, title: "Blockchain Cybersecurity", skills: ["Security", "AI"], location: "Online", type: "Seminar", image: "https://images.unsplash.com/photo-1518770660439-4636190af475", participants: 300 },
+        { id: 105, title: "AI Bootcamp", skills: ["AI", "Python"], location: "Lab 502", type: "Workshop", image: "https://images.unsplash.com/photo-1677442136019-21780ecad995", participants: 75 },
+        { id: 106, title: "Startup Pitch", skills: ["Business"], location: "Main Hall", type: "Event", image: "https://images.unsplash.com/photo-1552664730-d307ca884978", participants: 42 },
+        { id: 107, title: "Cloud Native Summit", skills: ["Cloud", "Docker"], location: "AB2", type: "Seminar", image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa", participants: 215 },
+        { id: 108, title: "DevOps Pipeline Lab", skills: ["DevOps", "Linux"], location: "Lab 102", type: "Workshop", image: "https://images.unsplash.com/photo-1618401471353-b98aadebc25a", participants: 60 },
+        { id: 109, title: "Ethical Hacking 101", skills: ["Security", "Linux"], location: "Online", type: "Workshop", image: "https://images.unsplash.com/photo-1563986768609-322da13575f3", participants: 400 },
+        { id: 110, title: "Data Viz with D3.js", skills: ["Web", "Data"], location: "AB4", type: "Workshop", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71", participants: 85 },
+        { id: 111, title: "Quantum Logic Intro", skills: ["Quantum", "Math"], location: "Main Hall", type: "Seminar", image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb", participants: 150 },
+        { id: 112, title: "Mobile App Hack", skills: ["React Native", "Firebase"], location: "Lab 303", type: "Hackathon", image: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c", participants: 110 },
+        { id: 113, title: "UI/UX Case Study", skills: ["Design", "Figma"], location: "Online", type: "Seminar", image: "https://images.unsplash.com/photo-1586717791821-3f44a563eb4c", participants: 320 },
+        { id: 114, title: "Game Dev with Unity", skills: ["C#", "Gaming"], location: "Tech Park", type: "Workshop", image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f", participants: 55 },
+        { id: 115, title: "SEO for Tech Blogs", skills: ["Marketing", "Writing"], location: "Online", type: "Seminar", image: "https://images.unsplash.com/photo-1432888622747-4eb9a8f2c20a", participants: 90 }
+    ];
+
+    // 2. STATIC HISTORICAL RECORD: These 7 events are exclusive to the "Attended" section
+    const historicalEvents = [
+        { id: 201, title: "8086 Micro-Architecture", skills: ["8086", "Assembly"], location: "Micro Lab", type: "Workshop", image: "https://images.unsplash.com/photo-1518770660439-4636190af475", participants: 40 },
+        { id: 202, title: "Full-Stack SaaS Finance", skills: ["PHP", "React", "Tailwind"], location: "AB1", type: "Hackathon", image: "https://images.unsplash.com/photo-1454165833767-027ffea9e77b", participants: 85 },
+        { id: 203, title: "CTF: The Shadow Pipeline", skills: ["Security", "CTF"], location: "Lab 3", type: "Hackathon", image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b", participants: 120 },
+        { id: 204, title: "Probability & Stats Mastery", skills: ["Statistics", "Math"], location: "MG Hall", type: "Seminar", image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71", participants: 300 },
+        { id: 205, title: "Embedded Safety Systems", skills: ["Embedded", "C", "ESP32"], location: "Tech Park", type: "Workshop", image: "https://images.unsplash.com/photo-1517077304055-6e89abbf09b0", participants: 30 },
+        { id: 206, title: "Professional Grooming Hub", skills: ["Style", "Presentation"], location: "Main Hall", type: "Event", image: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937", participants: 60 },
+        { id: 207, title: "SheHacks Cyber Awareness", skills: ["Security", "Advocacy"], location: "Auditorium", type: "Event", image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b", participants: 500 }
+    ];
+
+    const masterRegistry = [...allEvents, ...historicalEvents];
+    localStorage.setItem('all_events_registry', JSON.stringify(masterRegistry));
+
+    let wishlist = JSON.parse(localStorage.getItem('event_wishlist')) || [];
+    let currentFilter = "All";
+    let currentView = "feed";
+
+    function updateCounts() {
+        document.getElementById("count-wish").innerText = wishlist.length;
+        document.getElementById("count-done").innerText = historicalEvents.length; // Always shows 7
+        localStorage.setItem('event_wishlist', JSON.stringify(wishlist));
+    }
+
+    function setView(view) {
+        currentView = view;
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-link-active'));
+        if (view === 'feed') {
+            document.getElementById("main-title").innerText = "🎓 VIT Events Hub";
+            document.getElementById("search-filter-area").classList.remove('hidden');
+            document.getElementById("view-indicator").classList.add('hidden');
+            document.getElementById("nav-find").classList.add('nav-link-active');
+        } else {
+            document.getElementById("main-title").innerText = view === 'wishlist' ? "Saved Items" : "Attended Records";
+            document.getElementById("search-filter-area").classList.add('hidden');
+            document.getElementById("view-indicator").classList.remove('hidden');
+            document.getElementById(view === 'wishlist' ? "nav-wishlist" : "nav-completed").classList.add('nav-link-active');
+        }
+        render();
+    }
+
+    function render() {
+        let container = document.getElementById("eventsContainer");
+        container.innerHTML = "";
+        
+        let displayList = [];
+        if (currentView === 'feed') {
+            let term = document.getElementById("search").value.toLowerCase();
+            displayList = allEvents.filter(e => (currentFilter === "All" || e.type === currentFilter) && e.title.toLowerCase().includes(term));
+        } else if (currentView === 'wishlist') {
+            displayList = allEvents.filter(e => wishlist.includes(e.id));
+        } else if (currentView === 'completed') {
+            displayList = historicalEvents; // Lock to the 7 unique past events
+        }
+
+        displayList.forEach(event => {
+            const isSaved = wishlist.includes(event.id);
+            const isHistorical = historicalEvents.some(h => h.id === event.id);
+            let div = document.createElement("div");
+            div.className = "event-card flex flex-col cursor-pointer relative";
+            div.innerHTML = `
+                <div onclick="showPopup(${event.id}, ${isHistorical})" class="h-48 w-full overflow-hidden">
+                    <img src="${event.image}" class="w-full h-full object-cover">
+                </div>
+                <div class="absolute top-4 left-4 px-2 py-1 bg-black/50 backdrop-blur text-[9px] text-white font-bold rounded uppercase tracking-wider">${event.participants} Participants</div>
+                ${!isHistorical ? `
+                <button onclick="toggleSave(event, ${event.id})" class="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur rounded-full shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="${isSaved ? 'bookmark-active' : ''}"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                </button>` : ''}
+                <div onclick="showPopup(${event.id}, ${isHistorical})" class="p-6">
+                    <span class="px-2 py-1 bg-slate-100 text-[10px] font-bold text-slate-500 rounded uppercase tracking-wider">${event.type}</span>
+                    <h3 class="text-lg font-bold text-slate-900 mt-2 leading-tight">${event.title}</h3>
+                    <p class="text-xs text-slate-500 mt-1">${event.location}</p>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        updateCounts();
+    }
+
+    function toggleSave(e, id) { e.stopPropagation(); if (wishlist.includes(id)) wishlist = wishlist.filter(i => i !== id); else wishlist.push(id); render(); }
+
+    function showPopup(id, isHistorical) {
+        const event = masterRegistry.find(e => e.id === id);
+        const registerBtn = document.getElementById("registerBtn");
+        
+        document.getElementById("popup").classList.remove("hidden");
+        document.getElementById("popupTitle").innerText = event.title;
+        document.getElementById("popupBody").innerHTML = `
+            <p class="text-xs text-slate-400 uppercase font-bold tracking-widest">Category: ${event.type}</p>
+            <p class="text-sm text-slate-600">Location: ${event.location}</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+                ${event.skills.map(s => `<span class="bg-slate-100 px-2 py-1 rounded text-[10px] text-slate-500">#${s}</span>`).join('')}
+            </div>
+            ${isHistorical ? '<div class="mt-4 p-3 bg-green-50 text-green-700 text-xs font-bold rounded-xl border border-green-100 flex items-center gap-2">✓ Verified Achievement</div>' : ''}
+        `;
+
+        if (isHistorical) {
+            registerBtn.classList.add("hidden");
+        } else {
+            registerBtn.classList.remove("hidden");
+            registerBtn.onclick = () => {
+                alert(`Successfully registered for ${event.title}!`);
+                closePopup();
+            };
+        }
+    }
+
+    function closePopup() { document.getElementById("popup").classList.add("hidden"); }
+    function setFilter(type, btn) { currentFilter = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); render(); }
+    
+    window.onload = () => setView('feed');
+</script>
+</body>
+
+</html>

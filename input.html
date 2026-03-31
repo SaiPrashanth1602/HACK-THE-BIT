@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalX | Terminal_v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --green: #00ff88; --pink: #ff00ff; --bg: #0a0a0f; }
+        body {
+            font-family: 'JetBrains Mono', monospace; background-color: var(--bg); color: white;
+            background-image: linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .cyber-card { border: 1px solid rgba(0, 255, 136, 0.3); background: rgba(0,0,0,0.9); clip-path: polygon(5% 0, 100% 0, 100% 95%, 95% 100%, 0 100%, 0 5%); }
+        .btn { border: 1px solid var(--green); padding: 14px; color: var(--green); cursor: pointer; transition: 0.3s; width: 100%; text-align: center; font-weight: bold; }
+        .btn:hover { background: var(--green); color: black; box-shadow: 0 0 20px var(--green); }
+        .btn-outline { border: 1px solid rgba(255, 255, 255, 0.1); padding: 14px; color: rgba(255, 255, 255, 0.4); cursor: pointer; transition: 0.3s; width: 100%; text-align: center; font-size: 10px; }
+        .btn-outline:hover { border-color: var(--pink); color: var(--pink); }
+        .step { display: none; width: 100%; }
+        .step.active { display: flex; flex-direction: column; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .skill-chip { border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; font-size: 10px; }
+        .skill-chip:hover { border-color: var(--green); }
+        .selected { border: 2px solid var(--green) !important; background: rgba(0, 255, 136, 0.1); color: var(--green); font-weight: bold; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+    <main class="w-full max-w-2xl">
+        
+        <section id="step-1" class="step active">
+            <div class="flex items-center gap-2 mb-2">
+                <div class="w-3 h-3 bg-green-400"></div>
+                <h1 class="orbitron text-4xl text-green-400">SignalX</h1>
+            </div>
+            <p class="text-xs opacity-50 mb-8 tracking-widest">ESTABLISHING CONNECTION // INITIALIZE PROFILE</p>
+            
+            <div class="space-y-4 mb-8">
+                <input type="text" id="name" placeholder="OPERATIVE NAME" class="w-full bg-black/60 border border-white/20 p-4 outline-none focus:border-green-400 uppercase">
+                <input type="email" id="email" placeholder="ENCRYPTED EMAIL" class="w-full bg-black/60 border border-white/20 p-4 outline-none focus:border-green-400">
+            </div>
+            
+            <p class="orbitron text-[10px] mb-4 text-pink-500 tracking-widest uppercase">Select Designation</p>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div onclick="setPath('work', this)" class="path-btn border border-white/20 p-6 text-center cursor-pointer hover:bg-white/5">
+                    <i data-lucide="briefcase" class="mx-auto mb-2"></i>
+                    <span class="orbitron text-xs">PROFESSIONAL</span>
+                </div>
+                <div onclick="setPath('study', this)" class="path-btn border border-white/20 p-6 text-center cursor-pointer hover:bg-white/5">
+                    <i data-lucide="graduation-cap" class="mx-auto mb-2"></i>
+                    <span class="orbitron text-xs">ACADEMIC</span>
+                </div>
+            </div>
+            <button onclick="goNext(2)" class="btn orbitron">NEXT_PHASE</button>
+        </section>
+
+        <section id="step-2" class="step">
+            <h1 class="orbitron text-3xl mb-2 text-green-400">SignalX_Details</h1>
+            <p class="text-xs opacity-50 mb-8">Syncing professional parameters...</p>
+            <div id="dynamic-fields" class="space-y-4 mb-8"></div>
+            <button onclick="goNext(3)" class="btn orbitron">NEXT_PHASE</button>
+        </section>
+
+        <section id="step-3" class="step">
+            <h1 class="orbitron text-3xl mb-2 text-green-400">Skill_Matrix</h1>
+            <p class="text-xs opacity-50 mb-8">Enable specific modules for your SignalX ID.</p>
+            <div id="skill-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8"></div>
+            <button onclick="goNext(4)" class="btn orbitron">CONFIRM_MATRIX</button>
+        </section>
+
+        <section id="step-4" class="step">
+            <h1 class="orbitron text-3xl mb-2 text-pink-500">Interest_Intercept</h1>
+            <p class="text-xs opacity-50 mb-8">Define your primary focus areas for customized signals.</p>
+            <div class="space-y-4 mb-8">
+                <textarea id="interests" placeholder="e.g. AI ethics, Web3 security, Fintech scalability..." class="w-full h-32 bg-black/60 border border-white/20 p-4 outline-none focus:border-pink-500 text-sm"></textarea>
+                <div class="grid grid-cols-2 gap-2">
+                    <div onclick="toggleInterest('Freelance', this)" class="interest-chip border border-white/10 p-3 text-[10px] orbitron cursor-pointer text-center">FREELANCE_JOBS</div>
+                    <div onclick="toggleInterest('Campus', this)" class="interest-chip border border-white/10 p-3 text-[10px] orbitron cursor-pointer text-center">CAMPUS_EVENTS</div>
+                </div>
+            </div>
+            <button onclick="goNext(5)" class="btn orbitron border-pink-500 text-pink-500 hover:bg-pink-500">CONTINUE_UPLOAD</button>
+        </section>
+
+        <section id="step-5" class="step">
+            <h1 class="orbitron text-3xl mb-2 text-green-400">Data_Input</h1>
+            <p class="text-xs opacity-50 mb-8">Upload source file for automated verification.</p>
+            <div onclick="document.getElementById('file-input').click()" id="drop-zone" class="border-2 border-dashed border-white/20 p-16 text-center cursor-pointer hover:bg-white/5 transition">
+                <i data-lucide="upload-cloud" class="mx-auto mb-4 w-12 h-12 opacity-30 text-green-400"></i>
+                <p id="file-name" class="text-sm opacity-50">Link Resume (PDF/DOCX)</p>
+                <input type="file" id="file-input" class="hidden" onchange="handleFileUpload(this)">
+            </div>
+            <div class="mt-8 flex flex-col gap-4">
+                <button id="resume-next" onclick="goNext(6)" class="btn orbitron hidden">FINISH_ENROLLMENT</button>
+                <button onclick="goNext(6)" class="btn-outline orbitron">SKIP_FILE_UPLOAD [NOT RECOMMENDED]</button>
+            </div>
+        </section>
+
+        <section id="step-6" class="step">
+            <div class="cyber-card p-10 border-green-400 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-2 bg-green-400 text-black orbitron text-[8px] font-bold">SIGNALX_VERIFIED</div>
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 id="final-name" class="orbitron text-4xl mb-1 text-white">NAME</h2>
+                        <p id="final-status" class="text-pink-500 orbitron text-xs font-bold">STATUS</p>
+                    </div>
+                    <div id="final-id-badge" class="w-12 h-12 border border-green-400 flex items-center justify-center orbitron text-green-400">X1</div>
+                </div>
+                
+                <div class="space-y-6 text-sm border-t border-white/10 pt-6">
+                    <div id="final-info" class="grid grid-cols-1 gap-2 text-gray-300 italic"></div>
+                    <div>
+                        <p class="orbitron text-[10px] text-green-400 mb-3">ACTIVE_MODULES:</p>
+                        <div id="final-skills" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+                <button onclick="saveAndEnter()" class="mt-10 btn orbitron">ACCESS_SIGNALX_DASHBOARD</button>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        let state = { 
+            name: "", email: "", path: "", skills: [], interests: "", interestTags: [], resume: null 
+        };
+
+        // Skill Bank updated based on your provided data (Jobs & Events)
+        const skillBank = {
+            work: ['React', 'Tailwind', 'Python', 'AI', 'Security', 'Web3', 'Full Stack', 'Cloud', 'Docker', 'Kotlin', 'Solidity', 'SQL', 'UI/UX', 'SEO', 'Laravel'],
+            study: ['Coding', 'AI', 'Blockchain', 'Web Development', 'Robotics', 'Cybersecurity', 'Agriculture', 'Leadership', 'Cloud Computing', 'Research']
+        };
+
+        function setPath(p, el) {
+            state.path = p;
+            document.querySelectorAll('.path-btn').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function toggleSkill(s, el) {
+            if(state.skills.includes(s)) {
+                state.skills = state.skills.filter(i => i !== s);
+                el.classList.remove('selected');
+            } else {
+                state.skills.push(s);
+                el.classList.add('selected');
+            }
+        }
+
+        function toggleInterest(tag, el) {
+            if(state.interestTags.includes(tag)) {
+                state.interestTags = state.interestTags.filter(t => t !== tag);
+                el.classList.remove('selected');
+            } else {
+                state.interestTags.push(tag);
+                el.classList.add('selected');
+            }
+        }
+
+        function handleFileUpload(input) {
+            if(input.files[0]) {
+                state.resume = input.files[0].name;
+                document.getElementById('file-name').innerText = "DATA_LOCKED: " + state.resume;
+                document.getElementById('drop-zone').classList.add('selected');
+                document.getElementById('resume-next').classList.remove('hidden');
+            }
+        }
+
+        function goNext(num) {
+            // Logic for Step 2 Dynamic Inputs
+            if(num === 2) {
+                state.name = document.getElementById('name').value;
+                state.email = document.getElementById('email').value;
+                if(!state.name || !state.path) return alert("SIGNALX ERROR: NAME AND DESIGNATION REQUIRED");
+                
+                const fields = document.getElementById('dynamic-fields');
+                fields.innerHTML = state.path === 'work' ? 
+                    `<input type="text" id="comp" placeholder="CURRENT_ORGANIZATION" class="w-full bg-black/50 border border-white/20 p-4 outline-none focus:border-green-400 uppercase">
+                     <input type="text" id="role" placeholder="PRIMARY_ROLE" class="w-full bg-black/50 border border-white/20 p-4 outline-none focus:border-green-400 uppercase">` :
+                    `<input type="text" id="school" placeholder="EDUCATIONAL_INSTITUTION" class="w-full bg-black/50 border border-white/20 p-4 outline-none focus:border-green-400 uppercase">
+                     <input type="text" id="degree" placeholder="ACADEMIC_STREAM" class="w-full bg-black/50 border border-white/20 p-4 outline-none focus:border-green-400 uppercase">`;
+            }
+
+            // Logic for Step 3 Skills
+            if(num === 3) {
+                const grid = document.getElementById('skill-grid');
+                grid.innerHTML = skillBank[state.path].map(s => `
+                    <div onclick="toggleSkill('${s}', this)" class="skill-chip border border-white/10 hover:bg-white/5">
+                        ${s.toUpperCase()}
+                    </div>
+                `).join('');
+            }
+
+            // Logic for Final Render
+            if(num === 6) renderFinal();
+
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step-${num}`).classList.add('active');
+            lucide.createIcons();
+        }
+
+        function renderFinal() {
+            document.getElementById('final-name').innerText = state.name;
+            document.getElementById('final-status').innerText = state.path === 'work' ? "SIGNALX_OPERATIVE" : "SIGNALX_SCHOLAR";
+            
+            const infoBox = document.getElementById('final-info');
+            if(state.path === 'work') {
+                infoBox.innerHTML = `<p>Sector: ${document.getElementById('comp').value || 'REDACTED'}</p>
+                                     <p>Clearance: ${document.getElementById('role').value || 'REDACTED'}</p>`;
+            } else {
+                infoBox.innerHTML = `<p>Institution: ${document.getElementById('school').value || 'REDACTED'}</p>
+                                     <p>Focus: ${document.getElementById('degree').value || 'REDACTED'}</p>`;
+            }
+
+            document.getElementById('final-skills').innerHTML = state.skills.map(s => 
+                `<span class="text-[8px] px-2 py-1 bg-green-400/10 border border-green-400/40 text-green-400 orbitron">#${s.toUpperCase()}</span>`
+            ).join('');
+        }
+
+        function saveAndEnter() {
+            localStorage.setItem('signalX_user', JSON.stringify({
+                ...state,
+                interests: document.getElementById('interests').value
+            }));
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html>

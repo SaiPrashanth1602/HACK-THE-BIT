@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalX | Dashboard_v2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}">
+    <style>
+        :root {
+            --green: #00ff88;
+            --pink: #ff00ff;
+            --bg: #0a0a0f;
+            --card: #12121a;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg);
+            color: #e0e0e0;
+            background-image: linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        .orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .cyber-card {
+            background: var(--card);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .chamfer {
+            clip-path: polygon(0 10px, 10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+        }
+
+        .neon-border {
+            border: 1px solid var(--green);
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        .action-btn {
+            border: 1px solid var(--green);
+            background: rgba(0, 255, 136, 0.05);
+            color: var(--green);
+            padding: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            letter-spacing: 2px;
+            transition: 0.3s;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .action-btn:hover {
+            background: var(--green);
+            color: black;
+            box-shadow: 0 0 30px var(--green);
+            transform: scale(1.02);
+        }
+
+        .data-label {
+            color: var(--pink);
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .data-value {
+            color: white;
+            font-size: 11px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--green);
+        }
+    </style>
+</head>
+
+<body class="p-6">
+
+    <header class="max-w-7xl mx-auto flex justify-between items-center mb-8">
+        <div>
+            <h1 class="orbitron text-2xl text-green-400">SIGNALX_DASHBOARD</h1>
+            <p class="text-[10px] opacity-40 uppercase tracking-widest">Neural Link Established // Operative Active</p>
+        </div>
+        <div class="text-right">
+            <p id="system-clock" class="text-xs text-green-400 opacity-70 orbitron"></p>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <button id="btn-upwork" class="action-btn chamfer flex items-center justify-center gap-3">
+            <i data-lucide="zap"></i> FIND JOBS
+        </button>
+        <button id="btn-events" class="action-btn chamfer flex items-center justify-center gap-3"
+            style="border-color: var(--pink); color: var(--pink);">
+            <i data-lucide="calendar"></i> CAMPUS SIGNALS
+        </button>
+    </div>
+
+    <main class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <div class="lg:col-span-4 space-y-6">
+            <section class="cyber-card p-6 chamfer neon-border">
+                <div class="flex justify-between items-start mb-6">
+                    <h2 class="orbitron text-[10px] text-green-400 tracking-widest uppercase">// Identity_Matrix</h2>
+                    <span id="user-id-badge"
+                        class="text-[9px] border border-green-400 px-2 text-green-400 orbitron">LVL_01</span>
+                </div>
+
+                <div class="mb-6">
+                    <p id="profile-name" class="text-3xl orbitron font-bold uppercase text-white leading-tight">
+                        LOADING...</p>
+                    <p id="profile-path-status"
+                        class="text-[10px] text-green-400 mt-1 orbitron tracking-tighter italic"></p>
+                </div>
+
+                <div class="grid grid-cols-1 border-t border-white/10 pt-6 gap-3">
+                    <div>
+                        <p class="data-label">Secure Channel</p>
+                        <p id="disp-email" class="data-value text-green-400/80 uppercase">REDACTED</p>
+                    </div>
+                    <div>
+                        <p id="label-inst" class="data-label">Deployment Base</p>
+                        <p id="disp-inst" class="data-value uppercase">REDACTED</p>
+                    </div>
+                    <div>
+                        <p id="label-role" class="data-label">Primary Designation</p>
+                        <p id="disp-role" class="data-value uppercase">REDACTED</p>
+                    </div>
+                    <div id="resume-status-container">
+                        <p class="data-label">Verification Source</p>
+                        <p id="disp-resume" class="data-value text-pink-500 uppercase">NO_FILE_LINKED</p>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <p class="data-label mb-2">Active Skills Modules</p>
+                    <div id="profile-tags" class="flex flex-wrap gap-2"></div>
+                </div>
+            </section>
+
+            <section class="cyber-card p-6 chamfer border border-white/10">
+                <h2 class="orbitron text-[10px] text-green-400 mb-4 tracking-widest uppercase">// Signal_Tuning</h2>
+                <div class="space-y-3">
+                    <div class="relative">
+                        <i data-lucide="cpu" class="absolute left-3 top-3.5 w-4 h-4 text-green-400/40"></i>
+                        <input id="skills-input" placeholder="SKILLS"
+                            class="w-full p-3 pl-10 bg-black/50 text-green-400 border border-white/10 outline-none focus:border-green-400 text-xs">
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="target" class="absolute left-3 top-3.5 w-4 h-4 text-green-400/40"></i>
+                        <input id="interest-input" placeholder="INTERESTS"
+                            class="w-full p-3 pl-10 bg-black/50 text-green-400 border border-white/10 outline-none focus:border-green-400 text-xs">
+                    </div>
+                    <button onclick="runSearch()"
+                        class="w-full border border-green-400 p-3 text-green-400 orbitron text-[10px] hover:bg-green-400 hover:text-black transition uppercase">REFRESH_FEEDS</button>
+                </div>
+            </section>
+        </div>
+
+        <div class="lg:col-span-8 space-y-6">
+            <section class="cyber-card p-6 chamfer border border-white/10">
+                <h2 class="orbitron text-[10px] text-green-400 mb-4 tracking-widest uppercase">// Neural_Interface_v4
+                </h2>
+                <div id="chatBox" class="h-48 overflow-y-auto text-xs mb-4 space-y-2 pr-2 font-mono">
+                    <p class="text-green-400/50">> Decrypting profile... Welcome back, Operative.</p>
+                </div>
+                <div class="flex gap-2">
+                    <input id="chatInput" placeholder="> Query system..."
+                        class="flex-1 p-3 bg-black/50 text-green-400 border border-white/10 outline-none focus:border-green-400 text-sm">
+                    <button onclick="askAI()"
+                        class="border border-green-400 px-6 py-2 text-green-400 orbitron text-xs hover:bg-green-400 hover:text-black transition">SEND</button>
+                </div>
+            </section>
+<div id="notificationBox" class="mb-6"></div>
+            <h2 class="orbitron text-[10px] text-green-400 tracking-widest uppercase">// TREND_ANALYZER_v1</h2>
+
+            <div id="trendResults" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+    </main>
+
+    <script src="data.js"></script>
+
+    <script>
+        const userData = JSON.parse(localStorage.getItem('signalX_user')) || {
+            name: "GUEST",
+            skills: [],
+            path: "study"
+        };
+function loadNotifications() {
+    const box = document.getElementById("notificationBox");
+    const notifications = JSON.parse(localStorage.getItem("signal_notifications")) || [];
+
+    if (notifications.length === 0) return;
+
+    box.innerHTML = notifications.slice(-3).reverse().map(n => `
+        <div class="border border-pink-500 bg-pink-500/10 p-4 mb-3 chamfer">
+            <p class="text-pink-400 orbitron text-[10px] uppercase">⚡ MATCH DETECTED</p>
+            <p class="text-white text-sm font-bold">${n.title}</p>
+            <p class="text-[10px] text-gray-400">Score: ${n.score} | ${n.time}</p>
+        </div>
+    `).join('');
+}
+        function init() {
+            lucide.createIcons();
+loadNotifications();
+            // Populate Identity Matrix
+            document.getElementById('profile-name').innerText = userData.name;
+            document.getElementById('profile-path-status').innerText = `[${userData.path.toUpperCase()}_PATH_ACTIVE]`;
+            document.getElementById('disp-email').innerText = userData.email || "N/A";
+            // Inside your init() function, after populate Identity Matrix:
+            setTimeout(() => {
+                const chatBox = document.getElementById('chatBox');
+                const pathLabel = userData.path === 'work' ? 'Sector-Professional' : 'Campus-Scholar';
+                chatBox.innerHTML += `<p class="text-pink-500 font-bold">> STATUS: ${pathLabel} Verified.</p>`;
+                chatBox.innerHTML += `<p class="text-green-400 opacity-80">> RECOMMENDATION: Run a 'CAMPUS SIGNAL' scan to detect high-value targets matching your ${userData.skills[0]} module.</p>`;
+            }, 1200);
+            document.getElementById('chatInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') askAI();
+            });
+            // Handle Academic vs Professional logic
+            if (userData.path === 'work') {
+                document.getElementById('label-inst').innerText = "HQ / Sector";
+                document.getElementById('disp-inst').innerText = userData.comp || "SME_UNSET";
+                document.getElementById('label-role').innerText = "Clearance Role";
+                document.getElementById('disp-role').innerText = userData.role || "OPERATIVE";
+            } else {
+                document.getElementById('label-inst').innerText = "Deployment Base";
+                document.getElementById('disp-inst').innerText = userData.school || "CAMPUS_UNSET";
+                document.getElementById('label-role').innerText = "Study Stream";
+                document.getElementById('disp-role').innerText = userData.degree || "SCHOLAR";
+            }
+
+            document.getElementById('disp-resume').innerText = userData.resume || "NO_VERIFICATION_FILE";
+runTrendAnalyzer();
+            // Skills Chips
+            const tags = document.getElementById('profile-tags');
+            userData.skills.forEach(s => {
+                tags.innerHTML += `<span class="bg-green-400/5 text-green-400 border border-green-400/20 px-2 py-1 text-[8px] uppercase font-bold tracking-tighter">#${s}</span>`;
+            });
+
+            // Initial Filter Values
+            document.getElementById('skills-input').value = userData.skills.join(', ');
+            document.getElementById('interest-input').value = userData.interests || "";
+
+            // Button Routing
+            document.getElementById('btn-upwork').onclick = () => window.location.href = 'results.html';
+            document.getElementById('btn-events').onclick = () => window.location.href = 'event-result.html';
+
+            // Start System Clock
+            setInterval(() => {
+                document.getElementById('system-clock').innerText = new Date().toLocaleTimeString();
+            }, 1000);
+
+            // Run initial scan
+            runSearch();
+        }
+
+        function runSearch() {
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = `<div class="col-span-full text-center py-10"><p class="orbitron text-green-400 animate-pulse text-[10px]">SCANNING FREQUENCIES...</p></div>`;
+
+            // Merge skills and interests for a wider search
+            const filterSkills = document.getElementById('skills-input').value.toLowerCase();
+
+            // Simulated Match Logic (Using your provided 'opportunities' and 'allEvents')
+            setTimeout(() => {
+                const combined = [...opportunities.slice(0, 4), ...allEvents.slice(0, 2)];
+                display(combined);
+            }, 800);
+        }
+
+        function display(list) {
+            const div = document.getElementById("results");
+            div.innerHTML = "";
+
+            list.forEach(op => {
+                const isEvent = op.image ? true : false;
+                div.innerHTML += `
+                    <div class="bg-[#12121a] p-5 chamfer border border-white/5 hover:border-green-400 transition-all group relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-1 bg-white/5 text-[7px] orbitron opacity-30">
+                            ${isEvent ? 'EVENT_SIG' : 'JOB_SIG'}
+                        </div>
+                        <h3 class="text-white orbitron text-xs font-bold mb-2 group-hover:text-green-400 transition">${op.title}</h3>
+                        <p class="text-[9px] text-gray-500 mb-3 line-clamp-1">${op.desc || op.skills.join(', ')}</p>
+                        <div class="flex justify-between items-center mt-4">
+                            <span class="text-[8px] text-pink-500 orbitron uppercase">${op.budget || op.location}</span>
+                            <button class="text-[8px] border border-white/20 px-3 py-1 hover:bg-white/10 orbitron">VIEW_SIGNAL</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        async function askAI() {
+            const input = document.getElementById("chatInput");
+            const box = document.getElementById("chatBox");
+            const API_KEY = "AIzaSyCtJzCj4F7CByp1GShMCHZmrrXKtO8JQlY"; // Your key detected
+
+            if (!input.value) return;
+
+            const userQuery = input.value;
+            input.value = "";
+
+            box.innerHTML += `<p class="text-white"> <span class="text-green-400 opacity-50">[USER]:</span> ${userQuery}</p>`;
+
+            const loadingId = "ai-loading-" + Date.now();
+            box.innerHTML += `<p id="${loadingId}" class="text-pink-500 animate-pulse font-bold">> [ANALYZING...]</p>`;
+            box.scrollTop = box.scrollHeight;
+
+            try {
+                // UPDATED: Using /v1/ instead of /v1beta/
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro-002:generateContent?key=${API_KEY}`; const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: `You are SignalX AI, a cyberpunk system assistant. User is ${userData.name}, a student at ${userData.school}. Answer briefly and in-character: ${userQuery}` }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.candidates && data.candidates[0].content) {
+                    const aiText = data.candidates[0].content.parts[0].text;
+                    const loadingElement = document.getElementById(loadingId);
+                    if (loadingElement) loadingElement.remove();
+
+                    box.innerHTML += `<p class="text-green-400 mb-2"><span class="text-pink-500 font-bold">[AI_CORE]:</span> ${aiText}</p>`;
+                } else {
+                    // This captures 404s, 400s, and API Key errors specifically
+                    const errorMsg = data.error ? data.error.message : "TERMINAL_OFFLINE";
+                    throw new Error(errorMsg);
+                }
+
+            } catch (err) {
+                const loadingElement = document.getElementById(loadingId);
+                if (loadingElement) {
+                    loadingElement.classList.remove('animate-pulse');
+                    loadingElement.innerHTML = `> [ERROR]: ${err.message}`;
+                }
+            }
+
+            box.scrollTop = box.scrollHeight;
+        }
+        window.onload = init;
+        
+        // 🔥 TREND ANALYZER
+function runTrendAnalyzer() {
+    const div = document.getElementById("trendResults");
+
+    // Merge jobs + events
+    const allData = [
+        ...opportunities,
+        ...(typeof allEvents !== "undefined" ? allEvents : [])
+    ];
+
+    // Sort by participants (TREND = popularity)
+    const sorted = allData.sort((a, b) => (b.participants || 0) - (a.participants || 0));
+
+    // Top trending (limit 8)
+    const top = sorted.slice(0, 8);
+
+    div.innerHTML = "";
+
+    top.forEach((item, index) => {
+        const isHot = index < 3; // top 3 = HOT
+
+        div.innerHTML += `
+        <div class="bg-[#12121a] p-5 chamfer border ${isHot ? 'border-pink-500' : 'border-white/5'} 
+                    hover:border-green-400 transition-all group relative overflow-hidden">
+
+            <div class="absolute top-0 right-0 px-2 py-1 text-[7px] orbitron 
+                        ${isHot ? 'bg-pink-500 text-black' : 'bg-white/5 text-white/30'}">
+                ${isHot ? 'HOT' : 'TREND'}
+            </div>
+
+            <h3 class="text-white orbitron text-xs font-bold mb-2 group-hover:text-green-400 transition">
+                ${item.title}
+            </h3>
+
+            <p class="text-[9px] text-gray-500 mb-3">
+                ${item.desc || (item.skills ? item.skills.join(', ') : '')}
+            </p>
+
+            <div class="flex justify-between items-center mt-4">
+                <span class="text-[8px] text-green-400 orbitron uppercase">
+                    ${item.participants || 0} SIGNALS
+                </span>
+
+                <span class="text-[8px] text-pink-500 orbitron uppercase">
+                    ${item.type || 'JOB'}
+                </span>
+            </div>
+
+            <div class="mt-3 w-full bg-white/10 h-1">
+                <div class="h-1 bg-green-400" style="width:${Math.min((item.participants || 0)/3,100)}%"></div>
+            </div>
+        </div>
+        `;
+    });
+}
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalX | Campus_Intercept_Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --green: #00ff88; --pink: #ff00ff; --bg: #050508; }
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg);
+            color: #e0e0e0;
+            background-image: radial-gradient(circle at 50% 50%, #1a1a2e 0%, #050508 100%);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .scanline {
+            width: 100%; height: 2px; background: rgba(0, 255, 136, 0.15);
+            position: fixed; top: 0; z-index: 10; pointer-events: none;
+            animation: scan 4s linear infinite;
+        }
+        @keyframes scan { from { top: 0; } to { top: 100vh; } }
+        .glitch-border { border: 1px solid var(--green); box-shadow: 0 0 15px rgba(0, 255, 136, 0.1); }
+        .event-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 4px solid var(--green);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .event-card:hover {
+            background: rgba(0, 255, 136, 0.04);
+            transform: translateX(8px);
+            border-color: var(--green);
+        }
+        .affinity-card { border-left-color: var(--pink); background: rgba(255, 0, 255, 0.03); }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+
+<body class="p-8">
+    <div class="scanline"></div>
+
+    <header class="max-w-6xl mx-auto mb-10 flex justify-between items-end border-b border-green-400/20 pb-6">
+        <div>
+            <h1 class="orbitron text-3xl text-green-400 tracking-tighter">CAMPUS_SIGNAL_FOUND</h1>
+            <p class="text-[10px] text-pink-500 uppercase tracking-widest mt-2">Intercepting VIT Chennai Network // 
+                <span id="sync-status" class="animate-pulse">DECRYPTING_LIVE_DATA</span></p>
+        </div>
+        <button onclick="window.location.href='dashboard.html'"
+            class="orbitron text-[9px] border border-green-400/40 px-4 py-2 hover:bg-green-400 hover:text-black transition uppercase tracking-widest">Return_to_Dashboard</button>
+    </header>
+
+    <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div class="lg:col-span-1 space-y-6">
+            <section class="glitch-border p-6 bg-black/40 backdrop-blur-sm sticky top-8">
+                <div class="flex items-center gap-2 mb-4">
+                    <div class="w-2 h-2 bg-green-400 animate-ping"></div>
+                    <h2 class="orbitron text-[10px] text-green-400 tracking-widest uppercase">// NEURAL_ADVISOR</h2>
+                </div>
+                <div id="ai-event-insight" class="text-[11px] leading-relaxed text-gray-400 font-mono italic">
+                    <p class="animate-pulse">INITIALIZING HEURISTIC ANALYSIS...</p>
+                </div>
+
+                <div class="mt-8 pt-6 border-t border-white/5">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] opacity-60 uppercase tracking-tighter">Affinity Strength</span>
+                        <span id="relevance-percent" class="text-green-400 orbitron text-xs">0%</span>
+                    </div>
+                    <div class="w-full bg-white/5 h-1 mb-6">
+                        <div id="relevance-bar" class="bg-green-400 h-full transition-all duration-1000" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-[9px] text-gray-500 uppercase">Archive Units:</span>
+                        <span id="archive-count" class="text-[9px] text-pink-500 orbitron">0 Units</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="lg:col-span-2 space-y-12">
+            <section>
+                <div class="flex items-center gap-4 mb-6">
+                    <h2 class="orbitron text-lg text-green-400 tracking-widest uppercase">// LIVE_SIGNALS: MARKET_FEED</h2>
+                    <div class="h-[1px] flex-1 bg-gradient-to-r from-green-500/30 to-transparent"></div>
+                </div>
+                <div id="event-results-container" class="space-y-4"></div>
+            </section>
+
+            <section>
+                <div class="flex items-center gap-4 mb-6">
+                    <h2 class="orbitron text-sm text-pink-500 tracking-widest uppercase animate-pulse">// HISTORICAL_AFFINITY: RECOMMENDED</h2>
+                    <div class="h-[1px] flex-1 bg-gradient-to-r from-pink-500/50 to-transparent"></div>
+                </div>
+                <div id="affinity-results-container" class="space-y-4"></div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const masterEvents = JSON.parse(localStorage.getItem('all_events_registry')) || [];
+        const wishlistIds = JSON.parse(localStorage.getItem('event_wishlist')) || [];
+        const historicalIds = [201, 202, 203, 204, 205, 206, 207];
+
+        function initIntercept() {
+            const container = document.getElementById('event-results-container');
+            const affinityContainer = document.getElementById('affinity-results-container');
+            const aiBox = document.getElementById('ai-event-insight');
+
+            if (masterEvents.length === 0) {
+                container.innerHTML = `<p class="opacity-40 italic border border-dashed border-white/10 p-4 text-center">NO DATA INTERCEPTED</p>`;
+                return;
+            }
+
+            // 1. GET YOUR MASTERED SKILLS FROM HISTORY (201-207)
+            const attendedEvents = masterEvents.filter(e => historicalIds.includes(e.id));
+            const masteredSkills = [...new Set(attendedEvents.flatMap(e => e.skills || []))].map(s => s.toLowerCase());
+            
+            // 2. GET CURRENT AVAILABLE EVENTS (Exclude history)
+            const liveSignals = masterEvents.filter(e => !historicalIds.includes(e.id));
+
+            // 3. SCORE LIVE SIGNALS BASED ON SKILL OVERLAP
+            const processed = liveSignals.map(ev => {
+                const skills = (ev.skills || []).map(s => s.toLowerCase());
+                // Find how many skills in this LIVE event match your HISTORY
+                const historyMatch = skills.filter(s => masteredSkills.includes(s)).length;
+                
+                return {
+                    ...ev,
+                    historyMatch,
+                    totalScore: historyMatch
+                };
+            }).sort((a, b) => b.totalScore - a.totalScore);
+
+            // 4. RENDER MARKET FEED (Everything currently active)
+            container.innerHTML = processed.slice(0, 6).map((ev, idx) => `
+                <div class="event-card p-6" style="animation: slideIn 0.3s ease-out ${idx * 0.1}s both;">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="orbitron text-base text-white font-bold">${ev.title}</h3>
+                            <p class="text-[9px] text-green-400 opacity-60 uppercase tracking-widest mt-1">${ev.location}</p>
+                        </div>
+                        <span class="text-green-400 font-bold orbitron text-[10px] border border-green-400/20 px-2 py-1">LIVE_SIGNAL</span>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between">
+                        <div class="flex flex-wrap gap-2">
+                            ${(ev.skills || []).map(s => `<span class="text-[8px] border border-white/10 text-gray-500 px-2 py-0.5 uppercase">${s}</span>`).join('')}
+                        </div>
+                        <button onclick="window.location.href='event.html'" 
+                            class="orbitron text-[8px] border border-green-400 text-green-400 px-4 py-2 hover:bg-green-400 hover:text-black transition uppercase tracking-widest ml-4">
+                            Register_Entry
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // 5. RENDER AFFINITY FEED (Live events that match your History)
+            const affinityMatches = processed.filter(e => e.historyMatch > 0);
+
+            if (affinityMatches.length > 0) {
+                affinityContainer.innerHTML = affinityMatches.map((ev, idx) => {
+                    // Find the specific skill that triggered the match
+                    const matchedSkill = ev.skills.find(s => masteredSkills.includes(s.toLowerCase())) || "Neural Link";
+
+                    return `
+                    <div class="event-card affinity-card p-6" style="animation: slideIn 0.4s ease-out ${idx * 0.1}s both;">
+                        <div class="flex justify-between items-start">
+                            <h3 class="orbitron text-base text-white font-bold">${ev.title}</h3>
+                            <span class="text-pink-400 orbitron text-[8px] border border-pink-500/30 px-2 py-1">AFFINITY_MATCH</span>
+                        </div>
+                        <p class="text-[11px] text-gray-400 mt-3 italic">Shared Protocol: <span class="text-pink-500">${matchedSkill}</span> detected in your intercept history.</p>
+                        <div class="mt-4 flex items-center justify-between">
+                            <div class="flex gap-2">
+                                ${(ev.skills || []).slice(0, 3).map(s => `<span class="text-[7px] text-pink-300 opacity-50 uppercase">${s}</span>`).join(' ')}
+                            </div>
+                            <button onclick="window.location.href='event.html'" 
+                                class="orbitron text-[8px] border border-pink-500 text-pink-500 px-4 py-2 hover:bg-pink-500 hover:text-black transition">
+                                INITIALIZE_EXTRACT
+                            </button>
+                        </div>
+                    </div>
+                `}).join('');
+            } else {
+                affinityContainer.innerHTML = `<p class="text-[10px] text-gray-600 uppercase italic p-4 border border-dashed border-gray-800">Searching for historical skill-match nodes...</p>`;
+            }
+
+            // 6. UPDATE SIDEBAR
+            document.getElementById('archive-count').innerText = `${attendedEvents.length} Units`;
+            
+            aiBox.innerHTML = `
+                <p>Neural engine analysis complete.</p>
+                <p class="mt-2">Based on your <span class="text-green-400">history at VIT Chennai</span>, I've isolated <span class="text-pink-500">${affinityMatches.length} available events</span> that match your established skill DNA.</p>
+            `;
+
+            setTimeout(() => {
+                const percent = (affinityMatches.length > 0) ? "88%" : "0%";
+                document.getElementById('relevance-bar').style.width = percent;
+                document.getElementById('relevance-percent').innerText = percent;
+            }, 500);
+        }
+
+        window.onload = initIntercept;
+    </script>
+</body>
+</html>
